@@ -21,11 +21,15 @@ module Puppet::Parser::Functions
         'array or string to work with')
     end
 
+    # Use the new URI.encode_www_form_component for ruby 1.9, and a hard coded list for 1.8 which
+    # doesn't have this method.
+    unsafe = ":/?#[]@!$&'(),;= {}\"+"
+
     if value.is_a?(Array)
       # Numbers in Puppet are often string-encoded which is troublesome ...
-      result = value.collect { |i| i.is_a?(String) ? URI.encode_www_form_component(i) : i }
+      result = value.collect { |i| i.is_a?(String) ? URI.respond_to?('encode_www_form_component') ? URI.encode_www_form_component(i) : URI.escape(i, unsafe) : i }
     else
-      result = URI.encode_www_form_component(value)
+      result = URI.respond_to?('encode_www_form_component') ? URI.encode_www_form_component(value) : URI.escape(value, unsafe)
     end
 
     return result
